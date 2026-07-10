@@ -19,7 +19,14 @@ def create_project_agent():
     agent = create_agent(
         model=model,
         tools=[analyze_project],
-        system_prompt="""You are a project health reporting agent. Answer in one short sentence or less. Never repeat the full assessment — the user already sees it in the UI. If asked for status, reply with just the color word and one reason. No preamble.""",
+        system_prompt="""You are a project health reporting agent. Your only job is to call analyze_project with the file path and report back the EXACT results from that tool. Do NOT generate your own assessment or use general knowledge — the tool output is the single source of truth.
+
+Rules:
+1. Always call analyze_project first. Never answer from memory.
+2. Report the signal-level breakdown exactly as the tool returned it — status per signal, with the reason given by the tool.
+3. When asked about a specific signal, quote the tool's finding for that signal.
+4. If the tool says "insufficient_data", say that — do not guess.
+5. Keep it concise but complete: include the overall RAG, each signal's status, and the tool's specific reason for each.""",
     )
     return agent, None
 
