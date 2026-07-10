@@ -1,41 +1,42 @@
 # Project Health Reporting Agent
 
-Automated project health reporting for Professional Services teams. Determines RAG (Red/Amber/Green) status from Excel project plans and generates weekly reports and monthly executive presentations.
+Automated project health reporting for Professional Services teams. Determines RAG (Red/Amber/Green) status from Excel project plans and generates reports via CLI, web UI, or an interactive chat agent.
 
-## Design Decisions
+**Try the live demo:** [https://project-health-agent.vercel.app/](https://project-health-agent.vercel.app/)
 
-**Deterministic RAG engine** — Scoring logic in `tools/rag_engine.py` with no LLM calls. Auditable, reproducible, explainable. Thresholds in `config/rag_thresholds.yaml`.
+---
 
-**5 signals scored independently** — Schedule slippage, budget burn, milestone health, blockers (via overdue critical tasks), stakeholder sentiment. Each outputs Green/Amber/Red or `insufficient_data`.
-
-**Aggregation rule** — Overall = worst signal, except: if exactly one Red and all others Green, cap at Amber.
-
-**Graceful degradation** — Missing data fields are tracked, not errored. Auto-detects different Excel formats.
-
-## Usage
+## Quick Start
 
 ```bash
+# 1. Clone
+git clone <repo-url>
+cd project-health-agent
+
+# 2. Install dependencies
 uv sync
 
-# Batch run
-uv run python run.py --date 2026-07-10
+# 3. Run CLI batch (processes sample data)
+uv run python run.py
 
-# Interactive AI agent
-uv run python agent.py
-
-# Monthly executive PPTX
-uv run python monthly_synthesis.py
-
-# Weekly cron
-0 9 * * 1 cd /path/to/project && uv run python run.py --schedule
+# 4. Run web UI
+uv run python app.py
+# Opens at http://localhost:8005
 ```
 
-## Sample Results
+### Prerequisites
 
-| Project | RAG | Key Drivers |
+- Python 3.11 – 3.12
+- [uv](https://docs.astral.sh/uv/getting-started/installation/)
+
+### Usage modes
+
+| Mode | Command | Description |
 |---|---|---|
-| Zycus - UniSan S2P (Plan B) | Red | 54 overdue tasks, 3 critical overdue |
-| Zycus - Titan S2P | Red | 33 overdue tasks, schedule at 5% Red |
-| CRM Migration | Amber | Budget overrun (90% spent at 70% complete) |
+| Web UI | `uv run python app.py` | Upload Excel → RAG assessment + chat agent |
+| CLI batch | `uv run python run.py` | Process `data/*.xlsx` → Markdown + JSON reports |
+| CLI agent | `uv run python agent.py` | Interactive LangChain/Groq agent |
+| PPTX report | `uv run python monthly_synthesis.py` | Monthly executive deck from weekly data |
+| Cron | `0 9 * * 1 uv run python run.py --schedule` | Weekly automated run |
 
-See [RAG_METHODOLOGY.md](RAG_METHODOLOGY.md) for the full methodology.
+> **Note:** The LLM agent (chat + `agent.py`) requires a [Groq API key](https://console.groq.com/keys). Set it in `.env`: `GROQ_API_KEY=your_key_here`. The CLI runner and RAG engine work without one.
