@@ -261,10 +261,96 @@ h1 {
 }
 .error-box .msg { font-size: 13px; color: #ccc; }
 
+.chat { display: none; margin-top: 32px; }
+.chat-header {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.chat-messages {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 12px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+.chat-msg {
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  line-height: 1.55;
+  max-width: 85%;
+}
+.chat-msg.user {
+  background: var(--card);
+  border: 1px solid var(--border);
+  align-self: flex-end;
+  color: var(--text);
+}
+.chat-msg.agent {
+  background: #1A1E28;
+  border: 1px solid var(--border);
+  align-self: flex-start;
+  color: #D4D2CE;
+}
+.chat-msg.agent strong {
+  color: var(--accent);
+  font-weight: 500;
+}
+.chat-input-row {
+  display: flex;
+  gap: 8px;
+}
+.chat-input {
+  flex: 1;
+  padding: 10px 14px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.chat-input:focus { border-color: var(--accent); }
+.chat-input::placeholder { color: var(--muted); }
+.chat-send {
+  padding: 10px 18px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.chat-send:hover { background: var(--accent); color: var(--surface); }
+.chat-send:disabled { opacity: 0.25; cursor: not-allowed; }
+.chat-thinking {
+  font-size: 12px;
+  color: var(--muted);
+  padding: 8px 14px;
+  font-family: var(--font-mono);
+  display: none;
+}
+
 @media (max-width: 640px) {
   .container { padding: 24px 16px 48px; }
   .subtitle { font-size: 20px; }
   .meta-grid { grid-template-columns: 1fr; }
+  .chat-msg { max-width: 95%; }
 }
 </style>
 </head>
@@ -305,6 +391,16 @@ h1 {
   <div class="error-box" id="errorBox">
     <div class="label">Error</div>
     <div class="msg" id="errorMsg"></div>
+  </div>
+
+  <div class="chat" id="chat">
+    <div class="chat-header">Ask the Agent</div>
+    <div class="chat-messages" id="chatMessages"></div>
+    <div class="chat-thinking" id="chatThinking">Thinking</div>
+    <div class="chat-input-row">
+      <input class="chat-input" id="chatInput" type="text" placeholder="Ask a question about this project…" autocomplete="off">
+      <button class="chat-send" id="chatSend">Send</button>
+    </div>
   </div>
 </div>
 
@@ -375,10 +471,13 @@ async function assess() {
   }
 }
 
+let currentFilepath = '';
+
 function showResult(data) {
   const ex = data.extracted;
   const rag = data.rag;
   const overall = rag.overall_status;
+  currentFilepath = data.filepath || '';
   const colorMap = { Red: '#E0483E', Amber: '#E8A838', Green: '#3CB371', insufficient_data: '#8B8D92' };
   const color = colorMap[overall] || '#8B8D92';
   const statusLabel = overall === 'insufficient_data' ? 'Insufficient Data' : overall;
@@ -445,13 +544,67 @@ function showResult(data) {
 
   resultContent.innerHTML = html;
   result.style.display = 'block';
+  chatMessages.innerHTML = '';
+  chat.style.display = 'block';
   result.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  chatInput.focus();
 }
 
 function showError(msg) {
   errorMsg.textContent = msg;
   errorBox.style.display = 'block';
   errorBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+const chat = document.getElementById('chat');
+const chatMessages = document.getElementById('chatMessages');
+const chatInput = document.getElementById('chatInput');
+const chatSend = document.getElementById('chatSend');
+const chatThinking = document.getElementById('chatThinking');
+
+chatSend.addEventListener('click', sendMessage);
+chatInput.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+});
+
+async function sendMessage() {
+  const msg = chatInput.value.trim();
+  if (!msg || !currentFilepath) return;
+
+  chatInput.value = '';
+  chatSend.disabled = true;
+  chatThinking.style.display = 'block';
+
+  appendMessage(msg, 'user');
+
+  try {
+    const form = new FormData();
+    form.append('message', msg);
+    form.append('filepath', currentFilepath);
+
+    const res = await fetch('/chat', { method: 'POST', body: form });
+    const data = await res.json();
+
+    if (!res.ok) {
+      appendMessage(data.detail || 'Chat failed', 'agent');
+    } else {
+      appendMessage(data.response, 'agent');
+    }
+  } catch (e) {
+    appendMessage('Network error: ' + e.message, 'agent');
+  } finally {
+    chatSend.disabled = false;
+    chatThinking.style.display = 'none';
+    chatInput.focus();
+  }
+}
+
+function appendMessage(text, role) {
+  const div = document.createElement('div');
+  div.className = 'chat-msg ' + role;
+  div.textContent = text;
+  chatMessages.appendChild(div);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }

@@ -1,8 +1,10 @@
 import datetime
 import os
 import traceback
+import asyncio
 from pathlib import Path
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from concurrent.futures import ThreadPoolExecutor
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -10,6 +12,7 @@ from tools.tool import extract_project_data
 from tools.rag_engine import evaluate
 
 app = FastAPI(title="Project Health Agent")
+executor = ThreadPoolExecutor(max_workers=2)
 
 
 @app.get("/favicon.ico")
@@ -45,9 +48,8 @@ async def assess(file: UploadFile = File(...)):
     magic = content[:4].hex()
     print(f"Upload: {file.filename} ({fsize} bytes, magic: {magic})")
 
-    # Detect actual format from magic bytes, not extension
-    is_zip = content[:2] == b"PK"        # .xlsx (zip-based)
-    is_ole = content[:8] == b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"  # .xls (OLE2)
+    is_zip = content[:2] == b"PK"
+    is_ole = content[:8] == b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"
 
     if not is_zip and not is_ole:
         raise HTTPException(400, (
@@ -55,7 +57,6 @@ async def assess(file: UploadFile = File(...)):
             "Upload a .xlsx file saved from Excel."
         ))
 
-    # If it's OLE2 (.xls format), convert to .xlsx for openpyxl compatibility
     tmp_path = uploads_dir / f"upload_{os.urandom(4).hex()}.xlsx"
     if is_zip:
         tmp_path.write_bytes(content)
@@ -78,16 +79,42 @@ async def assess(file: UploadFile = File(...)):
         as_of = datetime.datetime.now()
         data = extract_project_data.invoke({"filepath": str(tmp_path), "as_of_date": as_of})
         rag = evaluate.invoke({"data": data})
-        return {"extracted": data, "rag": rag}
+        return {"extracted": data, "rag": rag, "filepath": str(tmp_path)}
     except HTTPException:
         raise
     except Exception as e:
         tb = traceback.format_exc()
         print(f"Error processing {file.filename}:\n{tb}")
         raise HTTPException(500, f"Failed to read the Excel file: {e}")
-    finally:
-        if tmp_path.exists():
-            tmp_path.unlink()
+
+
+@app.post("/chat")
+async def chat(message: str = Form(...), filepath: str = Form(...)):
+    if not Path(filepath).exists():
+        raise HTTPException(400, "Project file expired. Please re-upload the file.")
+
+    from agent import create_project_agent
+    agent, err = create_project_agent()
+    if err:
+        raise HTTPException(503, f"Agent unavailable: {err}. Set GROQ_API_KEY in your Vercel environment variables.")
+
+    prompt = f"I have a project file at {filepath}. {message}"
+
+    loop = asyncio.get_event_loop()
+    try:
+        result = await asyncio.wait_for(
+            loop.run_in_executor(executor, lambda: agent.invoke(
+                {"messages": [{"role": "user", "content": prompt}]},
+                config={"configurable": {"thread_id": "web-user"}},
+            )),
+            timeout=25,
+        )
+        return {"response": result["messages"][-1].content}
+    except asyncio.TimeoutError:
+        raise HTTPException(504, "Agent took too long to respond. Try a simpler question.")
+    except Exception as e:
+        print(f"Agent error: {e}")
+        raise HTTPException(500, f"Agent error: {e}")
 
 
 if __name__ == "__main__":

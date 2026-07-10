@@ -9,23 +9,32 @@ load_dotenv()
 
 from tools.analyze import analyze_project
 
-api_key = os.getenv("GROQ_API_KEY")
-if not api_key:
-    print("Error: GROQ_API_KEY not found in .env file")
-    sys.exit(1)
 
-model = ChatGroq(model="llama-3.3-70b-versatile")
+def create_project_agent():
+    api_key = os.getenv("GROQ_API_KEY")
+    if not api_key:
+        return None, "GROQ_API_KEY not set"
 
-agent = create_agent(
-    model=model,
-    tools=[analyze_project],
-    system_prompt="""You are a project health reporting agent for a Professional Services team.
+    model = ChatGroq(model="llama-3.3-70b-versatile")
+    agent = create_agent(
+        model=model,
+        tools=[analyze_project],
+        system_prompt="""You are a project health reporting agent for a Professional Services team.
 
-When the user provides a file path, call the analyze_project tool with the file path.
-Then present the results clearly to the user. Highlight the RAG status, key signals, and any recommendations.""",
-)
+You have access to the analyze_project tool which reads an Excel project plan and returns a complete health assessment including RAG status, signal breakdown, and recommendations.
+
+When the user asks about a project, call analyze_project with the file path. Present the results clearly.
+You can also answer general questions about project management, RAG methodology, and the assessment criteria.""",
+    )
+    return agent, None
+
 
 if __name__ == "__main__":
+    agent, err = create_project_agent()
+    if err:
+        print("Error:", err)
+        sys.exit(1)
+
     print("Project Health Agent ready. Type your query (or 'q' to quit).")
     while True:
         user_query = input("User: ")
