@@ -408,17 +408,17 @@ function showToast(msg) {
 function idleTemplates() {
   showTemplates([
     { label: 'Upload a project plan', action: () => fileInput.click() },
-    { label: 'What is RAG?', action: () => sendTemplate('What is RAG?') },
-    { label: 'How does it work?', action: () => sendTemplate('How does this tool work?') },
+    { label: 'How does RAG scoring work?', action: () => sendTemplate('Explain how the RAG scoring rules work for each signal') },
+    { label: 'What data is extracted?', action: () => sendTemplate('What fields and metrics do you extract from the project plan?') },
   ]);
 }
 
 function loadedTemplates() {
   showTemplates([
-    { label: 'What\'s the main risk?', action: () => sendTemplate('What is the main risk for this project?') },
-    { label: 'Budget breakdown', action: () => sendTemplate('Show me the budget breakdown') },
-    { label: 'Executive summary', action: () => sendTemplate('Generate an executive summary') },
-    { label: 'What should I do?', action: () => sendTemplate('What actions do you recommend?') },
+    { label: 'Break down each signal', action: () => sendTemplate('Give me a detailed breakdown of each RAG signal and what drove the score') },
+    { label: 'Risk mitigation plan', action: () => sendTemplate('Based on the signals, draft a risk mitigation plan') },
+    { label: 'Schedule deep dive', action: () => sendTemplate('Analyze the schedule health in detail — which tasks are slipping and why') },
+    { label: 'Compare with benchmarks', action: () => sendTemplate('How does this project compare to typical RAG benchmarks for similar programs?') },
   ]);
 }
 
@@ -581,7 +581,7 @@ async function init() {
     localStorage.removeItem(STORAGE_KEY);
   }
 
-  addMessage(render('Welcome to **Project Health**. Upload a project plan (.xlsx or .xls) and I\'ll assess its RAG status — analyzing schedule, budget, milestones, blockers, and stakeholder sentiment.'), 'agent');
+  addMessage(render('Upload a project plan and I\'ll assess its health across schedule, budget, milestones, blockers, and stakeholder sentiment.'), 'agent');
   idleTemplates();
 }
 
