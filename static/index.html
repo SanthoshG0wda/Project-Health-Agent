@@ -17,7 +17,6 @@
   --red: #E0483E;
   --amber: #E8A838;
   --green: #3CB371;
-  --radius: 8px;
   --font-body: 'IBM Plex Sans', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
 }
@@ -27,14 +26,15 @@ body {
   font-family: var(--font-body);
   background: var(--surface);
   color: var(--text);
-  height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
 .chat-wrap {
   width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -42,219 +42,183 @@ body {
 
 header {
   flex-shrink: 0;
-  padding: 24px 20px 16px;
+  padding: 18px 20px 10px;
   text-align: center;
 }
 h1 {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 2.5px;
+  letter-spacing: 3px;
   color: var(--muted);
 }
 
 .chat-messages {
   flex: 1;
   overflow-y: auto;
-  padding: 8px 20px;
+  padding: 6px 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
   scroll-behavior: smooth;
 }
-.chat-messages::-webkit-scrollbar { width: 5px; }
+.chat-messages::-webkit-scrollbar { width: 4px; }
 .chat-messages::-webkit-scrollbar-track { background: transparent; }
 .chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-.chat-messages::-webkit-scrollbar-thumb:hover { background: var(--muted); }
 @supports (scrollbar-width: thin) { .chat-messages { scrollbar-width: thin; scrollbar-color: var(--border) transparent; } }
 
-.chat-msg {
-  padding: 10px 14px;
-  border-radius: var(--radius);
-  font-size: 13.5px;
-  line-height: 1.6;
-  max-width: 88%;
+.msg-group {
+  padding: 8px 0;
   animation: fadeIn 0.25s ease;
 }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-.chat-msg.user {
-  background: #222734;
-  border: 1px solid var(--border);
-  align-self: flex-end;
+.msg-label {
+  font-size: 11px;
+  color: var(--muted);
+  padding: 0 20px;
+  margin-bottom: 4px;
+}
+.msg-bubble {
+  padding: 4px 20px;
+  font-size: 14px;
+  line-height: 1.65;
+}
+.msg-bubble.user {
   color: var(--text);
 }
-.chat-msg.agent {
-  align-self: flex-start;
+.msg-bubble.agent {
   color: #D4D2CE;
-  background: transparent;
-  padding: 10px 0;
 }
-.chat-msg.agent p { margin-bottom: 8px; }
-.chat-msg.agent p:last-child { margin-bottom: 0; }
-.chat-msg.agent strong { color: var(--accent); font-weight: 500; }
-.chat-msg.agent ul { margin: 6px 0 6px 18px; }
-.chat-msg.agent li { margin-bottom: 3px; }
-.chat-msg.agent .inline-code {
+.msg-bubble.agent p { margin-bottom: 10px; }
+.msg-bubble.agent p:last-child { margin-bottom: 0; }
+.msg-bubble.agent strong { color: var(--accent); font-weight: 500; }
+.msg-bubble.agent ul { margin: 6px 0 6px 20px; }
+.msg-bubble.agent li { margin-bottom: 4px; }
+.msg-bubble.agent .inline-code {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 13px;
   background: #1A1E28;
   padding: 1px 5px;
   border-radius: 3px;
 }
 
-.chat-msg.file-msg {
-  align-self: flex-end;
-  background: var(--card);
-  border: 1px solid var(--border);
-  padding: 10px 14px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12.5px;
+.status-label {
+  display: inline-block;
   font-family: var(--font-mono);
-  color: var(--accent);
-}
-.file-icon { width: 16px; height: 16px; flex-shrink: 0; }
-
-.assess-card {
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  overflow: hidden;
-  margin: 4px 0 8px;
-}
-.assess-card-accent {
-  height: 3px;
-  flex-shrink: 0;
-}
-.assess-card-body { padding: 14px 16px; }
-.assect-card-status {
-  font-family: var(--font-mono);
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  line-height: 1.2;
-}
-.assess-card-rec {
   font-size: 13px;
-  color: var(--muted);
-  margin-top: 2px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
 }
-.assess-card-meta {
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  color: var(--muted);
-  margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px solid var(--border);
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-.assess-card-signals {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 12px;
-  margin-top: 10px;
-  padding-top: 8px;
-  border-top: 1px solid var(--border);
-}
-.assess-signal {
-  font-size: 11.5px;
+.signal-row {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
+  font-size: 13px;
+  margin: 3px 0;
 }
-.assess-signal-dot {
-  width: 6px; height: 6px;
+.signal-dot {
+  width: 7px; height: 7px;
   border-radius: 50%;
   flex-shrink: 0;
 }
+
+.file-msg {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-family: var(--font-mono);
+  color: var(--accent);
+  padding: 2px 20px;
+}
+.file-icon { width: 15px; height: 15px; flex-shrink: 0; }
 
 .templates {
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
-  margin: 4px 0 2px;
+  padding: 4px 20px 8px;
   animation: fadeIn 0.3s ease;
 }
 .template-chip {
   font-size: 12px;
-  padding: 6px 14px;
-  background: var(--card);
+  padding: 5px 13px;
+  background: transparent;
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 14px;
   cursor: pointer;
   color: var(--muted);
   transition: all 0.2s;
   white-space: nowrap;
 }
-.template-chip:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-  background: #1F232E;
-}
+.template-chip:hover { border-color: var(--accent); color: var(--accent); }
 
-.chat-think {
+.think-indicator {
   display: none;
-  align-self: flex-start;
+  padding: 8px 20px;
   font-size: 12px;
   color: var(--muted);
   font-family: var(--font-mono);
-  padding: 6px 0;
   animation: pulse 1.5s ease-in-out infinite;
 }
-@keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+@keyframes pulse { 0%, 50%, 100% { opacity: 0.4; } 25%, 75% { opacity: 1; } }
 
-.chat-footer {
+.input-area {
   flex-shrink: 0;
-  padding: 12px 20px 20px;
+  padding: 8px 0 16px;
+}
+.input-inner {
   display: flex;
   gap: 8px;
   align-items: flex-end;
-}
-.attach-btn {
-  width: 38px; height: 38px;
-  display: flex; align-items: center; justify-content: center;
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 12px;
+  padding: 6px 6px 6px 16px;
+  transition: border-color 0.2s;
+}
+.input-inner:focus-within { border-color: var(--accent); }
+.attach-btn {
+  width: 34px; height: 34px;
+  display: flex; align-items: center; justify-content: center;
   cursor: pointer;
   color: var(--muted);
-  transition: all 0.2s;
+  transition: color 0.2s;
   flex-shrink: 0;
+  background: none;
+  border: none;
+  padding: 0;
 }
-.attach-btn:hover { border-color: var(--accent); color: var(--accent); }
+.attach-btn:hover { color: var(--accent); }
 .attach-btn svg { width: 18px; height: 18px; }
 .chat-input {
   flex: 1;
-  padding: 10px 14px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  padding: 8px 0;
+  background: transparent;
+  border: none;
   color: var(--text);
   font-family: var(--font-body);
-  font-size: 13.5px;
+  font-size: 14px;
   outline: none;
-  transition: border-color 0.2s;
+  resize: none;
 }
-.chat-input:focus { border-color: var(--accent); }
 .chat-input::placeholder { color: var(--muted); }
 .chat-send {
-  width: 38px; height: 38px;
+  width: 34px; height: 34px;
   display: flex; align-items: center; justify-content: center;
-  background: transparent;
-  border: 1px solid var(--accent);
+  background: var(--accent);
+  border: none;
   border-radius: 8px;
   cursor: pointer;
-  color: var(--accent);
-  transition: all 0.2s;
+  color: var(--surface);
+  transition: opacity 0.2s;
   flex-shrink: 0;
+  padding: 0;
 }
-.chat-send:hover { background: var(--accent); color: var(--surface); }
-.chat-send:disabled { opacity: 0.25; cursor: not-allowed; border-color: var(--border); color: var(--muted); }
-.chat-send svg { width: 18px; height: 18px; }
+.chat-send:disabled { opacity: 0.25; cursor: not-allowed; }
+.chat-send:hover:not(:disabled) { opacity: 0.85; }
+.chat-send svg { width: 16px; height: 16px; }
 
 .toast {
   display: none;
@@ -265,7 +229,7 @@ h1 {
   padding: 10px 20px;
   background: #1C1414;
   border: 1px solid var(--red);
-  border-radius: var(--radius);
+  border-radius: 10px;
   font-size: 13px;
   color: #ccc;
   z-index: 10;
@@ -273,7 +237,7 @@ h1 {
   max-width: 90%;
   text-align: center;
 }
-.toast .label {
+.toast .toast-label {
   font-family: var(--font-mono);
   font-size: 10px;
   color: var(--red);
@@ -282,11 +246,14 @@ h1 {
   margin-bottom: 2px;
 }
 
-  @media (max-width: 768px) {
-  header { padding: 14px 16px 12px; }
-  .chat-messages { padding: 4px 16px; }
-  .chat-msg { max-width: 95%; font-size: 13px; }
-  .chat-footer { padding: 10px 16px 16px; }
+@media (max-width: 768px) {
+  .chat-wrap { max-width: 100%; padding: 0 8px; }
+  header { padding: 14px 12px 8px; }
+  .msg-bubble { padding: 3px 12px; font-size: 13.5px; }
+  .msg-label { padding: 0 12px; }
+  .templates { padding: 4px 12px; }
+  .input-area { padding: 4px 4px 12px; }
+  .input-inner { padding: 4px 4px 4px 12px; border-radius: 10px; }
 }
 </style>
 </head>
@@ -333,21 +300,19 @@ const toast = document.getElementById('toast');
 const toastMsg = document.getElementById('toastMsg');
 
 let currentSessionId = '';
-let chatContext = 'idle';
+let pendingFile = null;
 const STORAGE_KEY = 'ph_session_id';
-
-function log(m) { console.log(m); }
 
 attachBtn.addEventListener('click', () => fileInput.click());
 fileInput.addEventListener('change', () => {
-  if (fileInput.files.length) uploadFile(fileInput.files[0]);
+  if (fileInput.files.length) selectFile(fileInput.files[0]);
 });
 chatSend.addEventListener('click', sendText);
 chatInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendText(); }
 });
 chatInput.addEventListener('input', () => {
-  chatSend.disabled = !chatInput.value.trim();
+  chatSend.disabled = !chatInput.value.trim() && !pendingFile;
 });
 
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -365,18 +330,32 @@ function render(text) {
 }
 
 function addMessage(text, role) {
-  const div = document.createElement('div');
-  div.className = 'chat-msg ' + role;
-  div.innerHTML = text;
-  chatMessages.appendChild(div);
+  const group = document.createElement('div');
+  group.className = 'msg-group';
+  const label = document.createElement('div');
+  label.className = 'msg-label';
+  label.textContent = role === 'user' ? 'You' : 'Project Health';
+  group.appendChild(label);
+  const bubble = document.createElement('div');
+  bubble.className = 'msg-bubble ' + role;
+  bubble.innerHTML = text;
+  group.appendChild(bubble);
+  chatMessages.appendChild(group);
   scrollBottom();
 }
 
 function addFileMsg(name) {
+  const group = document.createElement('div');
+  group.className = 'msg-group';
+  const label = document.createElement('div');
+  label.className = 'msg-label';
+  label.textContent = 'You';
+  group.appendChild(label);
   const div = document.createElement('div');
-  div.className = 'chat-msg file-msg';
+  div.className = 'file-msg';
   div.innerHTML = '<svg class="file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>' + esc(name);
-  chatMessages.appendChild(div);
+  group.appendChild(div);
+  chatMessages.appendChild(group);
   scrollBottom();
 }
 
@@ -445,17 +424,33 @@ function sendTemplate(text) {
 
 async function sendText() {
   const msg = chatInput.value.trim();
-  if (!msg) return;
+  if (!msg && !pendingFile) return;
 
-  chatInput.value = '';
-  chatSend.disabled = true;
   const templates = chatMessages.querySelector('.templates');
   if (templates) templates.remove();
+
+  // If a file is queued, upload it first
+  if (pendingFile) {
+    const file = pendingFile;
+    pendingFile = null;
+    removePendingFile();
+    const result = await uploadAndAssess(file);
+    if (!result) return; // upload failed, error already shown
+    if (!msg) {
+      chatInput.focus();
+      loadedTemplates();
+      return; // just upload, no message
+    }
+  }
+
+  if (!msg) return;
+  chatInput.value = '';
+  chatSend.disabled = !pendingFile;
 
   addMessage(esc(msg), 'user');
 
   if (!currentSessionId) {
-    addMessage(render('Upload a project plan first so I can analyze it. Click the attach button to upload a file.'), 'agent');
+    addMessage(render('Upload a project plan first so I can analyze it.'), 'agent');
     idleTemplates();
     return;
   }
@@ -484,46 +479,62 @@ async function sendText() {
   }
 }
 
-// ---- Upload ----
+// ---- File select (queues, does not upload) ----
 
-async function uploadFile(file) {
+function selectFile(file) {
   if (!file.name.match(/\.xlsx?$/i)) {
     showToast('Please upload an Excel file (.xlsx or .xls)');
     return;
   }
+  pendingFile = file;
+  chatSend.disabled = false;
+  showPendingFile(file.name);
+}
 
+function showPendingFile(name) {
+  const existing = document.getElementById('pendingFile');
+  if (existing) existing.remove();
+  const chip = document.createElement('div');
+  chip.id = 'pendingFile';
+  chip.style.cssText = 'display:flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:11px;color:var(--accent);background:var(--surface);border-radius:6px;padding:3px 8px;margin:2px 0;';
+  chip.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>'
+    + '<span>' + esc(name) + '</span>'
+    + '<span style="cursor:pointer;color:var(--muted);margin-left:2px" onclick="removePendingFile()">✕</span>';
+  chatInput.parentNode.insertBefore(chip, chatInput);
+}
+
+function removePendingFile() {
+  pendingFile = null;
+  const chip = document.getElementById('pendingFile');
+  if (chip) chip.remove();
+  chatSend.disabled = !chatInput.value.trim();
+}
+
+// ---- Upload + Assess (called from sendText when file is queued) ----
+
+async function uploadAndAssess(file) {
   addFileMsg(file.name);
-
   chatThink.style.display = 'block';
   scrollBottom();
 
-  try {
-    const form = new FormData();
-    form.append('file', file);
+  const form = new FormData();
+  form.append('file', file);
+  const res = await fetch('/assess', { method: 'POST', body: form });
+  const data = await res.json();
+  chatThink.style.display = 'none';
 
-    const res = await fetch('/assess', { method: 'POST', body: form });
-    const data = await res.json();
-    chatThink.style.display = 'none';
-
-    if (!res.ok) {
-      addMessage(esc(data.detail || 'Assessment failed'), 'agent');
-      idleTemplates();
-      return;
-    }
-
-    currentSessionId = data.session_id;
-    localStorage.setItem(STORAGE_KEY, currentSessionId);
-
-    renderAssessment(data);
-    loadedTemplates();
-    chatInput.placeholder = 'Ask a question about this project…';
-  } catch (e) {
-    chatThink.style.display = 'none';
-    addMessage(esc('Upload error: ' + e.message), 'agent');
+  if (!res.ok) {
+    addMessage(esc(data.detail || 'Assessment failed'), 'agent');
     idleTemplates();
-  } finally {
-    fileInput.value = '';
+    return null;
   }
+
+  currentSessionId = data.session_id;
+  localStorage.setItem(STORAGE_KEY, currentSessionId);
+  renderAssessment(data);
+  loadedTemplates();
+  chatInput.placeholder = 'Ask a question about this project…';
+  return data;
 }
 
 function renderAssessment(data) {
@@ -536,31 +547,19 @@ function renderAssessment(data) {
   const rec = overall === 'Red' ? 'Escalate to leadership immediately.' :
     overall === 'Amber' ? 'Monitor closely and prepare mitigation plan.' : 'Project is on track.';
 
-  const signalLabels = {
-    schedule_slippage: 'Schedule', budget_burn: 'Budget',
-    milestone_health: 'Milestones', blockers: 'Blockers',
-    stakeholder_sentiment: 'Sentiment'
-  };
-
   let signalsHtml = '';
+  const signalLabels = { schedule_slippage: 'Schedule', budget_burn: 'Budget', milestone_health: 'Milestones', blockers: 'Blockers', stakeholder_sentiment: 'Sentiment' };
   for (const [key, sig] of Object.entries(rag.signals)) {
     const sc = colorMap[sig.status] || '#8B8D92';
-    signalsHtml += '<span class="assess-signal"><span class="assess-signal-dot" style="background:' + sc + '"></span>' + (signalLabels[key] || key) + ': ' + sig.status + '</span>';
+    signalsHtml += '<div class="signal-row"><span class="signal-dot" style="background:' + sc + '"></span>' + (signalLabels[key] || key) + ': <strong style="color:' + sc + '">' + sig.status + '</strong></div>';
   }
 
-  const html = '<div class="assess-card">'
-    + '<div class="assess-card-accent" style="background:' + color + '"></div>'
-    + '<div class="assess-card-body">'
-    + '<div class="assect-card-status" style="color:' + color + '">' + label + '</div>'
-    + '<div class="assess-card-rec">' + rec + '</div>'
-    + '<div class="assess-card-meta">'
-    + '<span>' + esc(ex.project_name) + '</span>'
-    + '<span>' + (ex.project_manager ? esc(ex.project_manager) : '—') + '</span>'
-    + '<span>' + (ex.pct_complete != null ? Math.round(ex.pct_complete * 100) + '%' : '—') + '</span>'
-    + '<span>' + (ex.as_of_date ? ex.as_of_date.slice(0, 10) : '—') + '</span>'
-    + '</div>'
-    + '<div class="assess-card-signals">' + signalsHtml + '</div>'
-    + '</div></div>';
+  const details = esc(ex.project_name) + ' · ' + (ex.project_manager ? esc(ex.project_manager) : '—') + ' · ' + (ex.pct_complete != null ? Math.round(ex.pct_complete * 100) + '%' : '—');
+
+  const html = '<p><span class="status-label" style="color:' + color + '">' + label + '</span></p>'
+    + '<p>' + rec + '</p>'
+    + '<p style="font-size:12px;color:var(--muted)">' + details + '</p>'
+    + signalsHtml;
 
   addMessage(html, 'agent');
 }
@@ -580,8 +579,6 @@ async function init() {
         data.messages.forEach(function(m) {
           if (m.role === 'user') {
             addMessage(esc(m.content), 'user');
-          } else if (m.content.startsWith('<div class="assess-card"')) {
-            addMessage(m.content, 'agent');
           } else {
             addMessage(render(m.content), 'agent');
           }
@@ -594,7 +591,7 @@ async function init() {
     localStorage.removeItem(STORAGE_KEY);
   }
 
-  addMessage(render('Upload a project plan and I\'ll assess its health across schedule, budget, milestones, blockers, and stakeholder sentiment.'), 'agent');
+  addMessage(render('Upload a project plan and I\'ll assess its health across schedule, budget, milestones, blockers, and stakeholder sentiment. Click the attach button to select a file, then type your question.'), 'agent');
   idleTemplates();
 }
 
