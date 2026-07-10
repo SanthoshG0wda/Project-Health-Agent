@@ -119,7 +119,7 @@ async def chat(message: str = Form(...), session_id: str = Form(...)):
             f"Agent unavailable: {err}. Set GROQ_API_KEY in Vercel environment variables."
         )
 
-    prompt = f"I have a project file at {session['filepath']}. {message}"
+    prompt = f"Project file at {session['filepath']}. User: {message}"
 
     loop = asyncio.get_event_loop()
     try:
