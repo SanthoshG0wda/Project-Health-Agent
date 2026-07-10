@@ -155,6 +155,71 @@ async def get_session_detail(session_id: str):
     return {"session": session, "messages": messages}
 
 
+def _format_report(data, rag):
+    ex = data
+    signals = rag["signals"]
+    status = rag["overall_status"]
+    lines = []
+    lines.append(f"# Project Health Report: {ex['project_name']}")
+    lines.append(f"")
+    lines.append(f"| Field | Value |")
+    lines.append(f"|-------|-------|")
+    lines.append(f"| **Project** | {ex['project_name']} |")
+    lines.append(f"| **Project Manager** | {ex.get('project_manager') or 'N/A'} |")
+    lines.append(f"| **Completion** | {f'{round(ex['pct_complete'] * 100)}%' if ex.get('pct_complete') is not None else 'N/A'} |")
+    lines.append(f"| **As of** | {ex.get('as_of_date', 'N/A')[:10] if ex.get('as_of_date') else 'N/A'} |")
+    lines.append(f"| **Overall RAG** | {status} |")
+    b = ex.get("budget", {})
+    if b and b.get("total"):
+        lines.append(f"| **Budget** | ${b['total']:,.0f} total, ${b['spent']:,.0f} spent |")
+    if ex.get("stakeholder_sentiment"):
+        lines.append(f"| **Sentiment** | {ex['stakeholder_sentiment']} |")
+    lines.append(f"")
+    lines.append(f"## Signal Breakdown")
+    lines.append(f"")
+    for name, info in signals.items():
+        label = name.replace("_", " ").title()
+        lines.append(f"### {label}: {info['status']}")
+        lines.append(f"{info['detail']}")
+        lines.append(f"")
+    if status == "Red":
+        lines.append(f"**Recommendation**: Escalate to leadership immediately.")
+    elif status == "Amber":
+        lines.append(f"**Recommendation**: Monitor closely and prepare mitigation plan.")
+    else:
+        lines.append(f"**Recommendation**: Project is on track.")
+    if ex.get("extraction_warnings"):
+        lines.append(f"")
+        lines.append(f"## Data Quality Notes")
+        for w in ex["extraction_warnings"]:
+            lines.append(f"- {w}")
+    return "\n".join(lines)
+
+
+@app.get("/report/{session_id}")
+async def download_report(session_id: str):
+    session = get_session(session_id)
+    if not session:
+        raise HTTPException(404, "Session not found")
+    if not Path(session["filepath"]).exists():
+        raise HTTPException(400, "Project file expired. Please re-upload.")
+
+    from fastapi.responses import FileResponse
+    as_of = datetime.datetime.now()
+    data = extract_project_data.invoke({"filepath": session["filepath"], "as_of_date": as_of})
+    rag = evaluate.invoke({"data": data})
+    report = _format_report(data, rag)
+    safe_name = data["project_name"].replace(" ", "_").replace("/", "_")
+    report_path = Path(f"/tmp/report_{session_id}.md")
+    report_path.write_text(report)
+    return FileResponse(
+        path=str(report_path),
+        filename=f"{safe_name}_health_report.md",
+        media_type="text/markdown",
+        headers={"Content-Disposition": f"attachment; filename=\"{safe_name}_health_report.md\""},
+    )
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("app:app", host="0.0.0.0", port=8005, reload=True)
