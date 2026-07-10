@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project Health</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --surface: #121418;
+  --card: #1C1F26;
+  --border: #2A2E38;
+  --text: #E8E6E3;
+  --muted: #8B8D92;
+  --accent: #F4C28D;
+  --red: #E0483E;
+  --amber: #E8A838;
+  --green: #3CB371;
+  --radius: 8px;
+  --font-body: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+}
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+body {
+  font-family: var(--font-body);
+  background: var(--surface);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.5;
+}
+.container { max-width: 800px; margin: 0 auto; padding: 48px 24px 80px; }
+
+header { margin-bottom: 40px; }
+h1 {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--muted);
+}
+.subtitle {
+  font-size: 26px;
+  font-weight: 500;
+  color: var(--text);
+  margin-top: 6px;
+  line-height: 1.3;
+}
+
+.upload-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.upload-bar:hover { border-color: var(--accent); }
+.upload-bar.dragover { border-color: var(--accent); background: #1F232E; }
+.upload-bar.has-file { border-color: var(--accent); }
+.upload-icon {
+  width: 20px; height: 20px;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.upload-label { color: var(--muted); font-size: 14px; flex: 1; }
+.file-indicator {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--accent);
+}
+.file-indicator.visible { display: flex; }
+.indicator-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+
+.assess-wrap { margin-top: 16px; display: none; }
+.assess-wrap.visible { display: flex; justify-content: flex-end; }
+.assess-btn {
+  padding: 10px 28px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.assess-btn:hover { border-color: var(--accent); color: var(--accent); }
+.assess-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+.assess-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.spinner { display: none; text-align: center; margin: 56px 0; }
+.spinner-ring {
+  width: 28px; height: 28px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 12px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner-text {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.result { display: none; margin-top: 40px; }
+
+.status-banner {
+  display: flex;
+  align-items: stretch;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+.status-accent {
+  width: 4px;
+  flex-shrink: 0;
+}
+.status-body {
+  padding: 18px 22px;
+}
+.status-word {
+  font-family: var(--font-mono);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  line-height: 1.15;
+}
+.status-rec {
+  font-size: 14px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.status-meta-line {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.3px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+}
+
+.meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+.meta-item { background: var(--card); padding: 12px 16px; }
+.meta-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.meta-value { font-size: 14px; font-weight: 500; margin-top: 3px; }
+
+.signals {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+.signal-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--card);
+  padding: 12px 16px;
+}
+.signal-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.signal-body { flex: 1; min-width: 0; }
+.signal-label { font-size: 13px; font-weight: 500; }
+.signal-detail { font-size: 12px; color: var(--muted); margin-top: 1px; }
+.signal-status {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.rec-box {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+.rec-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+.rec-text { font-size: 14px; font-weight: 500; }
+
+.warnings { margin-top: 16px; }
+.warning-item {
+  font-size: 12px;
+  color: var(--amber);
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+.warning-item:last-child { border-bottom: none; }
+
+.error-box {
+  display: none;
+  margin-top: 24px;
+  padding: 14px 16px;
+  background: #1C1414;
+  border: 1px solid var(--red);
+  border-radius: var(--radius);
+}
+.error-box .label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--red);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 4px;
+}
+.error-box .msg { font-size: 13px; color: #ccc; }
+
+@media (max-width: 640px) {
+  .container { padding: 24px 16px 48px; }
+  .subtitle { font-size: 20px; }
+  .meta-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>Project Health</h1>
+    <p class="subtitle">Upload a project plan for an instant RAG assessment</p>
+  </header>
+
+  <div class="upload-bar" id="dropZone">
+    <svg class="upload-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+      <path d="M10 14V3m0 0L6 6.5M10 3l4 3.5"/>
+      <path d="M3 13v2a2 2 0 002 2h10a2 2 0 002-2v-2"/>
+    </svg>
+    <span class="upload-label">Drop <strong>.xlsx</strong> or <strong>.xls</strong> here — or click to browse</span>
+    <span class="file-indicator" id="fileIndicator">
+      <span class="indicator-dot"></span>
+      <span id="fileName"></span>
+    </span>
+  </div>
+  <input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none">
+
+  <div class="assess-wrap" id="assessWrap">
+    <button class="assess-btn" id="assessBtn">Assess</button>
+  </div>
+
+  <div class="spinner" id="spinner">
+    <div class="spinner-ring"></div>
+    <div class="spinner-text">Analyzing project plan</div>
+  </div>
+
+  <div class="result" id="result">
+    <div id="resultContent"></div>
+  </div>
+
+  <div class="error-box" id="errorBox">
+    <div class="label">Error</div>
+    <div class="msg" id="errorMsg"></div>
+  </div>
+</div>
+
+<script>
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+const fileIndicator = document.getElementById('fileIndicator');
+const fileName = document.getElementById('fileName');
+const assessWrap = document.getElementById('assessWrap');
+const assessBtn = document.getElementById('assessBtn');
+const spinner = document.getElementById('spinner');
+const result = document.getElementById('result');
+const resultContent = document.getElementById('resultContent');
+const errorBox = document.getElementById('errorBox');
+const errorMsg = document.getElementById('errorMsg');
+
+let selectedFile = null;
+
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropZone.classList.remove('dragover');
+  if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', () => {
+  if (fileInput.files.length) handleFile(fileInput.files[0]);
+});
+
+function handleFile(file) {
+  if (!file.name.match(/\.xlsx?$/i)) {
+    showError('Please upload an Excel file (.xlsx or .xls)');
+    return;
+  }
+  selectedFile = file;
+  fileName.textContent = file.name;
+  fileIndicator.classList.add('visible');
+  dropZone.classList.add('has-file');
+  assessWrap.classList.add('visible');
+  result.style.display = 'none';
+  errorBox.style.display = 'none';
+}
+
+assessBtn.addEventListener('click', assess);
+
+async function assess() {
+  if (!selectedFile) return;
+
+  assessBtn.disabled = true;
+  spinner.style.display = 'block';
+  result.style.display = 'none';
+  errorBox.style.display = 'none';
+
+  const form = new FormData();
+  form.append('file', selectedFile);
+
+  try {
+    const res = await fetch('/assess', { method: 'POST', body: form });
+    const data = await res.json();
+    if (!res.ok) { showError(data.detail || 'Assessment failed'); return; }
+    showResult(data);
+  } catch (e) {
+    showError('Network error: ' + e.message);
+  } finally {
+    spinner.style.display = 'none';
+    assessBtn.disabled = false;
+  }
+}
+
+function showResult(data) {
+  const ex = data.extracted;
+  const rag = data.rag;
+  const overall = rag.overall_status;
+  const colorMap = { Red: '#E0483E', Amber: '#E8A838', Green: '#3CB371', insufficient_data: '#8B8D92' };
+  const color = colorMap[overall] || '#8B8D92';
+  const statusLabel = overall === 'insufficient_data' ? 'Insufficient Data' : overall;
+
+  const recText = overall === 'Red' ? 'Escalate to leadership immediately.' :
+    overall === 'Amber' ? 'Monitor closely and prepare mitigation plan.' :
+    'Project is on track.';
+
+  let html = '';
+
+  html += '<div class="status-banner">';
+  html += '<div class="status-accent" style="background:' + color + '"></div>';
+  html += '<div class="status-body">';
+  html += '<div class="status-word" style="color:' + color + '">' + statusLabel + '</div>';
+  html += '<div class="status-rec">' + recText + '</div>';
+  html += '<div class="status-meta-line">' + esc(ex.project_name) + ' &middot; ' + (ex.project_manager || '—') + ' &middot; ' + (ex.pct_complete != null ? Math.round(ex.pct_complete * 100) + '% complete' : '—') + '</div>';
+  html += '</div></div>';
+
+  html += '<div class="meta-grid">';
+  html += '<div class="meta-item"><div class="meta-label">Project</div><div class="meta-value">' + esc(ex.project_name) + '</div></div>';
+  html += '<div class="meta-item"><div class="meta-label">Project Manager</div><div class="meta-value">' + esc(ex.project_manager || '—') + '</div></div>';
+  html += '<div class="meta-item"><div class="meta-label">Completion</div><div class="meta-value">' + (ex.pct_complete != null ? Math.round(ex.pct_complete * 100) + '%' : '—') + '</div></div>';
+  html += '<div class="meta-item"><div class="meta-label">As of</div><div class="meta-value">' + (ex.as_of_date ? ex.as_of_date.slice(0,10) : '—') + '</div></div>';
+  if (ex.budget && ex.budget.total) {
+    html += '<div class="meta-item"><div class="meta-label">Budget</div><div class="meta-value">$' + (ex.budget.total/1000).toFixed(0) + 'K / $' + (ex.budget.spent/1000).toFixed(0) + 'K spent</div></div>';
+  }
+  if (ex.stakeholder_sentiment) {
+    html += '<div class="meta-item"><div class="meta-label">Sentiment</div><div class="meta-value">' + esc(ex.stakeholder_sentiment) + '</div></div>';
+  }
+  html += '</div>';
+
+  html += '<div class="signals">';
+  const signalLabels = {
+    schedule_slippage: 'Schedule Slippage', budget_burn: 'Budget Burn',
+    milestone_health: 'Milestone Health', blockers: 'Blockers',
+    stakeholder_sentiment: 'Stakeholder Sentiment'
+  };
+  for (const [key, sig] of Object.entries(rag.signals)) {
+    const sc = colorMap[sig.status] || '#8B8D92';
+    html += '<div class="signal-row">';
+    html += '<span class="signal-dot" style="background:' + sc + '"></span>';
+    html += '<div class="signal-body"><div class="signal-label">' + (signalLabels[key] || key) + '</div>';
+    html += '<div class="signal-detail">' + esc(sig.detail) + '</div></div>';
+    html += '<span class="signal-status" style="color:' + sc + '">' + sig.status + '</span>';
+    html += '</div>';
+  }
+  html += '</div>';
+
+  if (ex.extraction_warnings && ex.extraction_warnings.length) {
+    html += '<div class="warnings"><div class="rec-label" style="margin-bottom:6px">Data Quality Notes</div>';
+    ex.extraction_warnings.forEach(function(w) {
+      html += '<div class="warning-item">' + esc(w) + '</div>';
+    });
+    html += '</div>';
+  }
+
+  if (ex.missing_data && ex.missing_data.length) {
+    html += '<div class="warnings"><div class="rec-label" style="margin-bottom:6px;margin-top:12px">Missing Data</div>';
+    ex.missing_data.forEach(function(m) {
+      html += '<div class="warning-item" style="color:#8B8D92">' + esc(m) + '</div>';
+    });
+    html += '</div>';
+  }
+
+  resultContent.innerHTML = html;
+  result.style.display = 'block';
+  result.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function showError(msg) {
+  errorMsg.textContent = msg;
+  errorBox.style.display = 'block';
+  errorBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+</script>
+</body>
+</html>

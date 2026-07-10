@@ -1,0 +1,45 @@
+{
+  "week": "2026-07-10",
+  "as_of_date": "2026-07-10T00:00:00",
+  "projects": [
+    {
+      "name": "Zycus - UniSan S2P Implementation",
+      "overall": "Red",
+      "pm": "Rajat Bothra",
+      "pct_complete": 0.44,
+      "signals": {
+        "schedule_slippage": "Amber",
+        "budget_burn": "insufficient_data",
+        "milestone_health": "Red",
+        "blockers": "Red",
+        "stakeholder_sentiment": "insufficient_data"
+      }
+    },
+    {
+      "name": "CRM Migration",
+      "overall": "Amber",
+      "pm": null,
+      "pct_complete": 0.7,
+      "signals": {
+        "schedule_slippage": "insufficient_data",
+        "budget_burn": "Red",
+        "milestone_health": "Green",
+        "blockers": "Green",
+        "stakeholder_sentiment": "insufficient_data"
+      }
+    },
+    {
+      "name": "Zycus - Titan S2P Implementation",
+      "overall": "Red",
+      "pm": "Aftab Hashambhai",
+      "pct_complete": 0.71,
+      "signals": {
+        "schedule_slippage": "Amber",
+        "budget_burn": "insufficient_data",
+        "milestone_health": "Red",
+        "blockers": "Green",
+        "stakeholder_sentiment": "insufficient_data"
+      }
+    }
+  ]
+}

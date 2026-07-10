@@ -1,0 +1,61 @@
+{
+  "extracted": {
+    "project_name": "Zycus - Titan S2P Implementation",
+    "project_manager": "Aftab Hashambhai",
+    "pct_complete": 0.71,
+    "schedule_health_summary": "Green",
+    "at_risk_flag": "High",
+    "task_totals": {
+      "not_started": 197,
+      "in_progress": 22,
+      "completed": 262,
+      "total": 493
+    },
+    "task_schedule_health": {
+      "Red": 25,
+      "Amber": 2,
+      "Green": 465,
+      "unlabeled": 1
+    },
+    "overdue_incomplete_tasks": 33,
+    "overdue_critical_tasks": 0,
+    "budget": {
+      "total": null,
+      "spent": null
+    },
+    "stakeholder_sentiment": null,
+    "missing_data": [
+      "budget",
+      "stakeholder_sentiment"
+    ],
+    "extraction_warnings": [
+      "Project Name missing from Summary sheet; used first task row's name as fallback."
+    ],
+    "as_of_date": "2026-07-10T00:00:00"
+  },
+  "rag": {
+    "overall_status": "Red",
+    "signals": {
+      "schedule_slippage": {
+        "status": "Amber",
+        "detail": "25/492 tasks (5%) flagged Red for schedule health."
+      },
+      "budget_burn": {
+        "status": "insufficient_data",
+        "detail": "No budget total/spend figures were present in the source file."
+      },
+      "milestone_health": {
+        "status": "Red",
+        "detail": "33 tasks are overdue (past End Date) and not marked Completed."
+      },
+      "blockers": {
+        "status": "Green",
+        "detail": "0 overdue tasks are flagged Critical (used as a blocker proxy; no explicit 'blocker' field was present in the source file)."
+      },
+      "stakeholder_sentiment": {
+        "status": "insufficient_data",
+        "detail": "No PM status-comment or sentiment source field was present in the source file."
+      }
+    }
+  }
+}

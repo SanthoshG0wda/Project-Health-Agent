@@ -1,0 +1,63 @@
+{
+  "extracted": {
+    "project_name": "CRM Migration",
+    "project_manager": null,
+    "pct_complete": 0.7,
+    "schedule_health_summary": null,
+    "at_risk_flag": null,
+    "task_totals": {
+      "not_started": 0,
+      "in_progress": 0,
+      "completed": 0,
+      "total": 2
+    },
+    "task_schedule_health": {
+      "Red": 0,
+      "Amber": 0,
+      "Green": 0,
+      "unlabeled": 0
+    },
+    "overdue_incomplete_tasks": 0,
+    "overdue_critical_tasks": 0,
+    "budget": {
+      "total": 200000.0,
+      "spent": 180000.0
+    },
+    "stakeholder_sentiment": "Client is concerned about timeline.",
+    "missing_data": [
+      "summary_metadata",
+      "schedule_health_summary"
+    ],
+    "extraction_warnings": [
+      "No 'Summary' sheet found; project-level metadata unavailable.",
+      "Detected simple flat format; extracting available fields.",
+      "Extra project row 2 found in simple format (only first project extracted)."
+    ],
+    "as_of_date": "2026-07-10T00:00:00"
+  },
+  "rag": {
+    "overall_status": "Amber",
+    "signals": {
+      "schedule_slippage": {
+        "status": "insufficient_data",
+        "detail": "No tasks had a labeled Schedule Health value."
+      },
+      "budget_burn": {
+        "status": "Red",
+        "detail": "Burn ratio (spend% / complete%) = 1.29"
+      },
+      "milestone_health": {
+        "status": "Green",
+        "detail": "0 tasks are overdue (past End Date) and not marked Completed."
+      },
+      "blockers": {
+        "status": "Green",
+        "detail": "0 overdue tasks are flagged Critical (used as a blocker proxy; no explicit 'blocker' field was present in the source file)."
+      },
+      "stakeholder_sentiment": {
+        "status": "insufficient_data",
+        "detail": "No PM status-comment or sentiment source field was present in the source file."
+      }
+    }
+  }
+}

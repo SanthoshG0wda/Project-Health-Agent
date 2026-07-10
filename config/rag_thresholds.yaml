@@ -1,0 +1,38 @@
+# RAG thresholds — Project Health Reporting Agent
+# Edit these to recalibrate scoring without touching code.
+
+schedule_slippage:
+  # % of tasks whose per-task Schedule Health is Red
+  green_max_pct: 0.05   # <=5% of tasks Red -> Green
+  amber_max_pct: 0.15   # 5-15% of tasks Red -> Amber
+  # >15% -> Red
+
+budget_burn:
+  # burn_rate = % of budget spent / % complete
+  # (not present in this sample file -> will show as "insufficient_data")
+  green_max_ratio: 1.10
+  amber_max_ratio: 1.25
+
+milestones:
+  # count of overdue (End Date < today) tasks with Status != Completed
+  green_max_overdue: 5
+  amber_max_overdue: 15
+  # >15 -> Red
+
+blockers:
+  # proxy: overdue AND flagged Critical (no explicit blocker field in source data)
+  green_max: 0
+  amber_max: 2
+  # >2 -> Red
+
+stakeholder_sentiment:
+  # no source field in current data -> always "insufficient_data" until
+  # PM status-comment field is populated. Sentiment is treated as a
+  # narrative modifier only -- it never independently drives status to Red.
+  enabled: false
+
+aggregation:
+  # overall status = worst individual signal, EXCEPT:
+  # if exactly one signal is Red and all others are Green, cap at Amber
+  # (prevents one noisy field from overriding an otherwise healthy project)
+  single_red_cap_to_amber: true
