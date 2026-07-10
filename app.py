@@ -2,17 +2,24 @@ import datetime
 import os
 import traceback
 import asyncio
+import uuid
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
+from db import init_db, create_session, add_message, get_session, get_messages, get_recent_sessions
 from tools.tool import extract_project_data
 from tools.rag_engine import evaluate
 
 app = FastAPI(title="Project Health Agent")
 executor = ThreadPoolExecutor(max_workers=2)
+
+
+@app.on_event("startup")
+async def startup():
+    init_db()
 
 
 @app.get("/favicon.ico")
@@ -79,7 +86,13 @@ async def assess(file: UploadFile = File(...)):
         as_of = datetime.datetime.now()
         data = extract_project_data.invoke({"filepath": str(tmp_path), "as_of_date": as_of})
         rag = evaluate.invoke({"data": data})
-        return {"extracted": data, "rag": rag, "filepath": str(tmp_path)}
+
+        session_id = uuid.uuid4().hex[:12]
+        project_name = data.get("project_name", "Unknown")
+        rag_status = rag["overall_status"]
+        create_session(session_id, project_name, str(tmp_path), rag_status)
+
+        return {"extracted": data, "rag": rag, "session_id": session_id}
     except HTTPException:
         raise
     except Exception as e:
@@ -89,32 +102,57 @@ async def assess(file: UploadFile = File(...)):
 
 
 @app.post("/chat")
-async def chat(message: str = Form(...), filepath: str = Form(...)):
-    if not Path(filepath).exists():
-        raise HTTPException(400, "Project file expired. Please re-upload the file.")
+async def chat(message: str = Form(...), session_id: str = Form(...)):
+    session = get_session(session_id)
+    if not session:
+        raise HTTPException(400, "Session not found. Please re-upload the file.")
+
+    if not Path(session["filepath"]).exists():
+        raise HTTPException(400, "Project file expired. Please re-upload.")
+
+    add_message(session_id, "user", message)
 
     from agent import create_project_agent
     agent, err = create_project_agent()
     if err:
-        raise HTTPException(503, f"Agent unavailable: {err}. Set GROQ_API_KEY in your Vercel environment variables.")
+        raise HTTPException(503,
+            f"Agent unavailable: {err}. Set GROQ_API_KEY in Vercel environment variables."
+        )
 
-    prompt = f"I have a project file at {filepath}. {message}"
+    prompt = f"I have a project file at {session['filepath']}. {message}"
 
     loop = asyncio.get_event_loop()
     try:
         result = await asyncio.wait_for(
             loop.run_in_executor(executor, lambda: agent.invoke(
                 {"messages": [{"role": "user", "content": prompt}]},
-                config={"configurable": {"thread_id": "web-user"}},
+                config={"configurable": {"thread_id": f"session-{session_id}"}},
             )),
             timeout=25,
         )
-        return {"response": result["messages"][-1].content}
+        response = result["messages"][-1].content
+        add_message(session_id, "agent", response)
+        return {"response": response}
     except asyncio.TimeoutError:
         raise HTTPException(504, "Agent took too long to respond. Try a simpler question.")
     except Exception as e:
         print(f"Agent error: {e}")
         raise HTTPException(500, f"Agent error: {e}")
+
+
+@app.get("/sessions")
+async def list_sessions():
+    sessions = get_recent_sessions()
+    return {"sessions": sessions}
+
+
+@app.get("/sessions/{session_id}")
+async def get_session_detail(session_id: str):
+    session = get_session(session_id)
+    if not session:
+        raise HTTPException(404, "Session not found")
+    messages = get_messages(session_id)
+    return {"session": session, "messages": messages}
 
 
 if __name__ == "__main__":
