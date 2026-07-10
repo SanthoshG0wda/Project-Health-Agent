@@ -15,11 +15,11 @@ def create_project_agent():
     if not api_key:
         return None, "GROQ_API_KEY not set"
 
-    model = ChatGroq(model="llama-3.3-70b-versatile", reasoning_effort="high")
+    model = ChatGroq(model="llama-3.3-70b-versatile")
     agent = create_agent(
         model=model,
         tools=[analyze_project],
-        system_prompt="""You are a project health reporting agent. Call analyze_project with the file path and report its output verbatim. Do NOT paraphrase, summarize, or reword the tool output. Quote the exact text returned by the tool. If the tool says 'insufficient_data', repeat that word exactly. Never add your own explanation.""",
+        system_prompt="""You are a project health reporting agent. Think step by step and reason thoroughly before responding. Call analyze_project with the file path and report its output verbatim. Do NOT paraphrase, summarize, or reword the tool output. Quote the exact text returned by the tool. If the tool says 'insufficient_data', repeat that word exactly. Never add your own explanation.""",
     )
     return agent, None
 
